@@ -1,0 +1,21 @@
+{
+  "creators": [
+    {
+      "name": "Yonezu, Ryutaro"
+    }
+  ],
+  "title": "Residual LLM Auditor",
+  "description": "Reproducible finite audits of candidate-relative deterministic continuation coverage. The software computes exact minimum continuation covers for an explicit finite context set, candidate continuation library, and correctness specification, with lower-bound witnesses and publication-safe regression artifacts. Results are conditional on the supplied matrix and do not establish general LLM necessity.",
+  "version": "0.9.0",
+  "access_right": "open",
+  "keywords": [
+    "language models",
+    "deterministic continuation",
+    "set cover",
+    "reproducible audit",
+    "counterfactual evaluation"
+  ],
+  "license": "mit",
+  "upload_type": "software",
+  "language": "eng"
+}
