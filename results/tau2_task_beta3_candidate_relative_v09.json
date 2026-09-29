@@ -1,0 +1,51 @@
+{
+  "schema": "candidate-relative-task-success-certificate-v0.9",
+  "notation": "beta_{Psi,C0}(q;H)",
+  "specification": "TAU2_TASK_SUCCESS",
+  "candidate_library_id": "C0_THREE_CANONICAL_FIX_SUFFIXES",
+  "candidate_library": [
+    "REFUEL",
+    "RESEAT_SIM",
+    "RESET_APN_REBOOT"
+  ],
+  "contexts": [
+    "DATA_USAGE_EXCEEDED",
+    "SIM_UNSEATED",
+    "APN_BROKEN"
+  ],
+  "matrix": [
+    [
+      1,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      1
+    ]
+  ],
+  "beta": 3,
+  "routing_bits_fixed_length": 2,
+  "source_level_separation_facts": [
+    "If SIM is missing, network search forces NO_SERVICE until sim_card_missing is cleared.",
+    "If APN name is BROKEN, network search forces NO_SERVICE until APN is reset to defaults.",
+    "reboot_device applies a pending APN reset but does not clear sim_card_missing.",
+    "reseat_sim_card clears sim_card_missing but does not repair a BROKEN APN.",
+    "refuel_data changes data_refueling_gb but does not repair SIM or APN state.",
+    "Only REFUEL satisfies the data-usage task's exact +2.0 GB refueling assertion."
+  ],
+  "claim_boundary": {
+    "certifies": "beta=3 for exactly H and exactly C0 under the stated task-success tests",
+    "does_not_certify": [
+      "minimum over the full telecom action/program language",
+      "minimum over every continuation emitted anywhere by the compiler",
+      "that no additional continuation could solve two or three contexts"
+    ]
+  }
+}

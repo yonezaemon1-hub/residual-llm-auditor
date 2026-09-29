@@ -1,0 +1,130 @@
+{
+  "schema": "compiler-emitted-deterministic-beta4-v0.8",
+  "specification": "TRACE_EXACT_LOOKUP_LABEL",
+  "published_lookup_counts": {
+    "GET_ORDER_DETAILS": 1332,
+    "GET_PRODUCT_DETAILS": 223,
+    "GET_USER_DETAILS": 3,
+    "LIST_ALL_PRODUCT_TYPES": 7,
+    "total": 1565
+  },
+  "audit": {
+    "site": "stretto:reach-retail:get_order_details",
+    "n_contexts": 1565,
+    "n_continuations": 4,
+    "beta": 4,
+    "routing_bits_fixed_length": 2,
+    "minimum_cover": [
+      "GET_ORDER_DETAILS",
+      "GET_PRODUCT_DETAILS",
+      "GET_USER_DETAILS",
+      "LIST_ALL_PRODUCT_TYPES"
+    ],
+    "lower_bound_certificate": {
+      "claim": "no cover of size < 4",
+      "exhaustive_failures": [
+        {
+          "candidate_continuations": [
+            "GET_ORDER_DETAILS"
+          ],
+          "uncovered_context_index": 1332
+        },
+        {
+          "candidate_continuations": [
+            "GET_PRODUCT_DETAILS"
+          ],
+          "uncovered_context_index": 0
+        },
+        {
+          "candidate_continuations": [
+            "GET_USER_DETAILS"
+          ],
+          "uncovered_context_index": 0
+        },
+        {
+          "candidate_continuations": [
+            "LIST_ALL_PRODUCT_TYPES"
+          ],
+          "uncovered_context_index": 0
+        },
+        {
+          "candidate_continuations": [
+            "GET_ORDER_DETAILS",
+            "GET_PRODUCT_DETAILS"
+          ],
+          "uncovered_context_index": 1555
+        },
+        {
+          "candidate_continuations": [
+            "GET_ORDER_DETAILS",
+            "GET_USER_DETAILS"
+          ],
+          "uncovered_context_index": 1332
+        },
+        {
+          "candidate_continuations": [
+            "GET_ORDER_DETAILS",
+            "LIST_ALL_PRODUCT_TYPES"
+          ],
+          "uncovered_context_index": 1332
+        },
+        {
+          "candidate_continuations": [
+            "GET_PRODUCT_DETAILS",
+            "GET_USER_DETAILS"
+          ],
+          "uncovered_context_index": 0
+        },
+        {
+          "candidate_continuations": [
+            "GET_PRODUCT_DETAILS",
+            "LIST_ALL_PRODUCT_TYPES"
+          ],
+          "uncovered_context_index": 0
+        },
+        {
+          "candidate_continuations": [
+            "GET_USER_DETAILS",
+            "LIST_ALL_PRODUCT_TYPES"
+          ],
+          "uncovered_context_index": 0
+        },
+        {
+          "candidate_continuations": [
+            "GET_ORDER_DETAILS",
+            "GET_PRODUCT_DETAILS",
+            "GET_USER_DETAILS"
+          ],
+          "uncovered_context_index": 1558
+        },
+        {
+          "candidate_continuations": [
+            "GET_ORDER_DETAILS",
+            "GET_PRODUCT_DETAILS",
+            "LIST_ALL_PRODUCT_TYPES"
+          ],
+          "uncovered_context_index": 1555
+        },
+        {
+          "candidate_continuations": [
+            "GET_ORDER_DETAILS",
+            "GET_USER_DETAILS",
+            "LIST_ALL_PRODUCT_TYPES"
+          ],
+          "uncovered_context_index": 1332
+        },
+        {
+          "candidate_continuations": [
+            "GET_PRODUCT_DETAILS",
+            "GET_USER_DETAILS",
+            "LIST_ALL_PRODUCT_TYPES"
+          ],
+          "uncovered_context_index": 0
+        }
+      ]
+    },
+    "router_certificate": null,
+    "classification": "IRREDUCIBLE_RELATIVE_TO_INTERFACE"
+  },
+  "claim_boundary": "Restricted to the published lookup-labeled transitions at this compiled site. No hand-back/model-fallback event is counted as a deterministic continuation."
+}

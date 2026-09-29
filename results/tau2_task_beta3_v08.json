@@ -1,0 +1,113 @@
+{
+  "schema": "task-success-beta3-static-certificate-v0.8",
+  "specification": {
+    "id": "TAU2_TASK_SUCCESS",
+    "description": "The official task-family environment assertions / exact extra assertion are satisfied."
+  },
+  "matrix": {
+    "rows": [
+      "DATA_USAGE_EXCEEDED",
+      "SIM_UNSEATED",
+      "APN_BROKEN"
+    ],
+    "columns": [
+      "REFUEL",
+      "RESEAT_SIM",
+      "RESET_APN_REBOOT"
+    ],
+    "values": [
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ]
+  },
+  "audit": {
+    "site": "stretto-telecom:check_apn_settings:task-success-three-faults",
+    "n_contexts": 3,
+    "n_continuations": 3,
+    "beta": 3,
+    "routing_bits_fixed_length": 2,
+    "minimum_cover": [
+      "REFUEL",
+      "RESEAT_SIM",
+      "RESET_APN_REBOOT"
+    ],
+    "lower_bound_certificate": {
+      "claim": "no cover of size < 3",
+      "exhaustive_failures": [
+        {
+          "candidate_continuations": [
+            "REFUEL"
+          ],
+          "uncovered_context_index": 1
+        },
+        {
+          "candidate_continuations": [
+            "RESEAT_SIM"
+          ],
+          "uncovered_context_index": 0
+        },
+        {
+          "candidate_continuations": [
+            "RESET_APN_REBOOT"
+          ],
+          "uncovered_context_index": 0
+        },
+        {
+          "candidate_continuations": [
+            "REFUEL",
+            "RESEAT_SIM"
+          ],
+          "uncovered_context_index": 2
+        },
+        {
+          "candidate_continuations": [
+            "REFUEL",
+            "RESET_APN_REBOOT"
+          ],
+          "uncovered_context_index": 1
+        },
+        {
+          "candidate_continuations": [
+            "RESEAT_SIM",
+            "RESET_APN_REBOOT"
+          ],
+          "uncovered_context_index": 0
+        }
+      ]
+    },
+    "router_certificate": null,
+    "classification": "IRREDUCIBLE_RELATIVE_TO_INTERFACE"
+  },
+  "source_level_separation_facts": [
+    "If SIM is missing, network search forces NO_SERVICE until sim_card_missing is cleared.",
+    "If APN name is BROKEN, network search forces NO_SERVICE until APN is reset to defaults.",
+    "reboot_device applies a pending APN reset but does not clear sim_card_missing.",
+    "reseat_sim_card clears sim_card_missing but does not repair a BROKEN APN.",
+    "refuel_data changes data_refueling_gb but does not repair SIM or APN state.",
+    "Only REFUEL satisfies the data-usage task's exact +2.0 GB refueling assertion."
+  ],
+  "compiler_site_evidence": {
+    "system": "Stretto",
+    "source": {
+      "repo": "alexnodeland/stretto",
+      "path": "docs/results/telecom-workflow-2026-09-26.procedure.json",
+      "git_blob_sha": "0ad44c5684b163e13e865f4af956ea0967caa6b5"
+    },
+    "site": "check_apn_settings",
+    "fact": "The compiled no-model telecom procedure, learned only from successful training episodes, has positive-count branches at this same site whose first state-changing fixes include refuel_data, reset_apn_settings, and reseat_sim_card."
+  },
+  "scope": "Finite three-context task-success certificate over the three explicit branch programs. This does not claim these are the only possible programs in the full telecom action space, nor that the exact three task instances can be mapped one-to-one to specific training leaves."
+}

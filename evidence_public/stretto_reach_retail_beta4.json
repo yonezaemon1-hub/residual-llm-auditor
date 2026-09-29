@@ -1,0 +1,19 @@
+{
+  "schema": "stretto-real-deterministic-multiway-v0.8",
+  "system": "Stretto",
+  "site": "get_order_details",
+  "specification": "TRACE_EXACT_LOOKUP_LABEL",
+  "source": {
+    "repo": "alexnodeland/stretto",
+    "path": "docs/results/reach-2026-09-26-retail.flow.json",
+    "git_blob_sha": "47ce927ccc8339d75a63699844b8d44126a1bf2a"
+  },
+  "published_lookup_counts": {
+    "GET_ORDER_DETAILS": 1332,
+    "GET_PRODUCT_DETAILS": 223,
+    "GET_USER_DETAILS": 3,
+    "LIST_ALL_PRODUCT_TYPES": 7,
+    "total": 1565
+  },
+  "claim_boundary": "Restricted to the published lookup-labeled transitions at this compiled site. No hand-back/model-fallback event is counted as a deterministic continuation."
+}

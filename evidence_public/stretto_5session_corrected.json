@@ -1,0 +1,21 @@
+{
+  "schema": "stretto-hybrid-site-evidence-v0.8",
+  "site": "get_order_details",
+  "specification": "TRACE_EXACT_NEXT_STEP",
+  "source": {
+    "repo": "alexnodeland/stretto",
+    "path": "docs/review.md",
+    "git_blob_sha": "96af54e0aa4404e04846dd35a9392b83c7c34745"
+  },
+  "published_counts": {
+    "GET_ORDER_DETAILS": 6,
+    "GET_PRODUCT_DETAILS": 2,
+    "HAND_BACK_RESPOND": 1,
+    "total": 9
+  },
+  "deterministic_continuations": [
+    "GET_ORDER_DETAILS",
+    "GET_PRODUCT_DETAILS"
+  ],
+  "correction_note": "HAND_BACK/RESPOND is not counted as a deterministic continuation. It exits the compiled read-only flow and returns control to the agent/model."
+}

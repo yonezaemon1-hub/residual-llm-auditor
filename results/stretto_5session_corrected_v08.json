@@ -1,0 +1,51 @@
+{
+  "schema": "corrected-stretto-hybrid-certificate-v0.8",
+  "specification": "TRACE_EXACT_NEXT_STEP",
+  "audit": {
+    "site": "stretto:get_order_details:5session",
+    "n_contexts": 9,
+    "n_deterministic_continuations": 2,
+    "deterministically_coverable_contexts": [
+      "GET_ORDER_DETAILS_1",
+      "GET_ORDER_DETAILS_2",
+      "GET_ORDER_DETAILS_3",
+      "GET_ORDER_DETAILS_4",
+      "GET_ORDER_DETAILS_5",
+      "GET_ORDER_DETAILS_6",
+      "GET_PRODUCT_DETAILS_1",
+      "GET_PRODUCT_DETAILS_2"
+    ],
+    "fallback_required_contexts": [
+      "HAND_BACK_RESPOND_1"
+    ],
+    "fallback_required_count": 1,
+    "full_deterministic_cover_exists": false,
+    "beta_det_coverable": 2,
+    "routing_bits_det_coverable": 1,
+    "minimum_deterministic_cover": [
+      "GET_ORDER_DETAILS",
+      "GET_PRODUCT_DETAILS"
+    ],
+    "lower_bound_certificate": [
+      {
+        "candidate_continuations": [
+          "GET_ORDER_DETAILS"
+        ],
+        "uncovered_context_index": 6,
+        "uncovered_context": "GET_PRODUCT_DETAILS_1"
+      },
+      {
+        "candidate_continuations": [
+          "GET_PRODUCT_DETAILS"
+        ],
+        "uncovered_context_index": 0,
+        "uncovered_context": "GET_ORDER_DETAILS_1"
+      }
+    ],
+    "fallback_label": "MODEL_OR_ORACLE_FALLBACK"
+  },
+  "interpretation": {
+    "statement": "Two deterministic lookup branches exactly cover 8/9 published next-step labels; the remaining 1/9 is a hand-back/model-fallback context under trace-exact reproduction.",
+    "correction": "v0.7's HAND_BACK-as-deterministic interpretation is superseded."
+  }
+}

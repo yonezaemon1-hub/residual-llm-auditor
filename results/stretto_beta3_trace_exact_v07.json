@@ -1,0 +1,78 @@
+{
+  "schema": "compiler-emitted-beta3-certificate-v0.7",
+  "system": "Stretto",
+  "site": "get_order_details",
+  "specification": {
+    "id": "TRACE_EXACT_NEXT_STEP",
+    "description": "A continuation succeeds iff it exactly matches the recorded agent next-step label at this compiled site."
+  },
+  "published_counts": {
+    "GET_ORDER_DETAILS": 6,
+    "GET_PRODUCT_DETAILS": 2,
+    "HAND_BACK_RESPOND": 1,
+    "total": 9
+  },
+  "audit": {
+    "site": "stretto:get_order_details",
+    "n_contexts": 9,
+    "n_continuations": 3,
+    "beta": 3,
+    "routing_bits_fixed_length": 2,
+    "minimum_cover": [
+      "GET_ORDER_DETAILS",
+      "GET_PRODUCT_DETAILS",
+      "HAND_BACK_RESPOND"
+    ],
+    "lower_bound_certificate": {
+      "claim": "no cover of size < 3",
+      "exhaustive_failures": [
+        {
+          "candidate_continuations": [
+            "GET_ORDER_DETAILS"
+          ],
+          "uncovered_context_index": 6
+        },
+        {
+          "candidate_continuations": [
+            "GET_PRODUCT_DETAILS"
+          ],
+          "uncovered_context_index": 0
+        },
+        {
+          "candidate_continuations": [
+            "HAND_BACK_RESPOND"
+          ],
+          "uncovered_context_index": 0
+        },
+        {
+          "candidate_continuations": [
+            "GET_ORDER_DETAILS",
+            "GET_PRODUCT_DETAILS"
+          ],
+          "uncovered_context_index": 8
+        },
+        {
+          "candidate_continuations": [
+            "GET_ORDER_DETAILS",
+            "HAND_BACK_RESPOND"
+          ],
+          "uncovered_context_index": 6
+        },
+        {
+          "candidate_continuations": [
+            "GET_PRODUCT_DETAILS",
+            "HAND_BACK_RESPOND"
+          ],
+          "uncovered_context_index": 0
+        }
+      ]
+    },
+    "router_certificate": null,
+    "classification": "IRREDUCIBLE_RELATIVE_TO_INTERFACE"
+  },
+  "interpretation": {
+    "statement": "All three continuations occur in the published compiled-site decisions; under exact next-step reproduction, dropping any one continuation makes its labeled contexts impossible to reproduce.",
+    "fixed_length_routing_bits": 2,
+    "scope": "trace-exact reproduction only; not benchmark-success necessity"
+  }
+}

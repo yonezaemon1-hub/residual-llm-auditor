@@ -1,0 +1,8 @@
+__pycache__/
+.pytest_cache/
+*.py[cod]
+private_evidence/
+local_matrices/
+results_private/
+downloaded_sources/
+*.private.json

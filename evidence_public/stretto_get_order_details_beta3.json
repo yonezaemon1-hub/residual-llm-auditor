@@ -1,0 +1,38 @@
+{
+  "schema": "public-compiler-site-evidence-v0.7",
+  "system": "Stretto",
+  "site": "get_order_details",
+  "specification": {
+    "id": "TRACE_EXACT_NEXT_STEP",
+    "description": "A continuation succeeds iff it exactly matches the recorded agent next-step label at this compiled site."
+  },
+  "source_review": {
+    "repo": "alexnodeland/stretto",
+    "path": "docs/review.md",
+    "git_blob_sha": "96af54e0aa4404e04846dd35a9392b83c7c34745"
+  },
+  "source_flow": {
+    "repo": "alexnodeland/stretto",
+    "path": "docs/examples/retail-5-sessions.flow.json",
+    "git_blob_sha": "8481f4c6064556fe0b2cc5746eabc559cdaf1236"
+  },
+  "published_counts": {
+    "GET_ORDER_DETAILS": 6,
+    "GET_PRODUCT_DETAILS": 2,
+    "HAND_BACK_RESPOND": 1,
+    "total": 9
+  },
+  "compiler_semantics": {
+    "offered_lookup_continuations": [
+      "GET_ORDER_DETAILS",
+      "GET_PRODUCT_DETAILS"
+    ],
+    "implicit_residual_continuation": "HAND_BACK_RESPOND",
+    "note": "Stretto's standard program decides between hand-back (0) and lookups offered after the preceding call."
+  },
+  "claim_boundary": [
+    "This certifies beta under the trace-exact next-step specification on the published nine decision labels.",
+    "It does not certify benchmark task success for alternative continuations.",
+    "It does not claim these nine decisions are held-out task-success counterfactuals."
+  ]
+}

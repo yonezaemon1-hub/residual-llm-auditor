@@ -1,0 +1,41 @@
+{
+  "site": "synthetic_beta3",
+  "contexts": [
+    "keep_case",
+    "move_case",
+    "delete_case"
+  ],
+  "continuations": [
+    "KEEP",
+    "MOVE",
+    "DELETE"
+  ],
+  "matrix": [
+    [
+      1,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      1
+    ]
+  ],
+  "feature_values": [
+    "KEEP",
+    "MOVE",
+    "DELETE"
+  ],
+  "feature_to_continuation": {
+    "KEEP": "KEEP",
+    "MOVE": "MOVE",
+    "DELETE": "DELETE"
+  },
+  "claim_boundary": "synthetic regression"
+}

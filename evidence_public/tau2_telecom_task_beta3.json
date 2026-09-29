@@ -1,0 +1,83 @@
+{
+  "schema": "tau2-telecom-task-beta3-v0.8",
+  "compiler_site": {
+    "system": "Stretto",
+    "source": {
+      "repo": "alexnodeland/stretto",
+      "path": "docs/results/telecom-workflow-2026-09-26.procedure.json",
+      "git_blob_sha": "0ad44c5684b163e13e865f4af956ea0967caa6b5"
+    },
+    "site": "check_apn_settings",
+    "fact": "The compiled no-model telecom procedure, learned only from successful training episodes, has positive-count branches at this same site whose first state-changing fixes include refuel_data, reset_apn_settings, and reseat_sim_card."
+  },
+  "contexts": [
+    {
+      "id": "DATA_USAGE_EXCEEDED",
+      "task_source": {
+        "repo": "sierra-research/tau2-bench",
+        "path": "src/tau2/domains/telecom/tasks/mobile_data_issues.py",
+        "git_blob_sha": "c74f6c419d22b9c57ae4d913f39e0be9765af3ed"
+      },
+      "official_fix": "REFUEL",
+      "success_requirement": "mobile data works with excellent speed, and extra assertion requires line.data_refueling_gb to increase by exactly 2.0 GB"
+    },
+    {
+      "id": "SIM_UNSEATED",
+      "task_source": {
+        "repo": "sierra-research/tau2-bench",
+        "path": "src/tau2/domains/telecom/tasks/service_issues.py",
+        "git_blob_sha": "8bc3dbc7cf056824cfa8e30b262909f0bcfce91e"
+      },
+      "official_fix": "RESEAT_SIM",
+      "success_requirement": "service status must become connected"
+    },
+    {
+      "id": "APN_BROKEN",
+      "task_source": {
+        "repo": "sierra-research/tau2-bench",
+        "path": "src/tau2/domains/telecom/tasks/service_issues.py",
+        "git_blob_sha": "8bc3dbc7cf056824cfa8e30b262909f0bcfce91e"
+      },
+      "official_fix": "RESET_APN_REBOOT",
+      "success_requirement": "service status must become connected"
+    }
+  ],
+  "branch_programs": [
+    {
+      "id": "REFUEL",
+      "program": "refuel_data(+2.0 GB)",
+      "state_effect": "increments line.data_refueling_gb by 2.0 and applies a one-time charge"
+    },
+    {
+      "id": "RESEAT_SIM",
+      "program": "reseat_sim_card",
+      "state_effect": "sets sim_card_missing=False and re-runs network search"
+    },
+    {
+      "id": "RESET_APN_REBOOT",
+      "program": "reset_apn_settings; reboot_device",
+      "state_effect": "marks APN for reset, reboot replaces APN with defaults, then re-runs network search"
+    }
+  ],
+  "tool_sources": {
+    "user_tools": {
+      "repo": "sierra-research/tau2-bench",
+      "path": "src/tau2/domains/telecom/user_tools.py",
+      "git_blob_sha": "a79447b0af1abbe23caeaaefa79b34432279f942"
+    },
+    "assistant_tools": {
+      "repo": "sierra-research/tau2-bench",
+      "path": "src/tau2/domains/telecom/tools.py",
+      "git_blob_sha": "c531b4c717233285271f3c4039961a6a8e562ed6"
+    }
+  },
+  "static_separation_facts": [
+    "If SIM is missing, network search forces NO_SERVICE until sim_card_missing is cleared.",
+    "If APN name is BROKEN, network search forces NO_SERVICE until APN is reset to defaults.",
+    "reboot_device applies a pending APN reset but does not clear sim_card_missing.",
+    "reseat_sim_card clears sim_card_missing but does not repair a BROKEN APN.",
+    "refuel_data changes data_refueling_gb but does not repair SIM or APN state.",
+    "Only REFUEL satisfies the data-usage task's exact +2.0 GB refueling assertion."
+  ],
+  "scope": "Finite three-context task-success certificate over the three explicit branch programs. This does not claim these are the only possible programs in the full telecom action space, nor that the exact three task instances can be mapped one-to-one to specific training leaves."
+}

@@ -1,0 +1,27 @@
+{
+  "site": "synthetic_beta1",
+  "contexts": [
+    "h1",
+    "h2",
+    "h3"
+  ],
+  "continuations": [
+    "A",
+    "B"
+  ],
+  "matrix": [
+    [
+      1,
+      1
+    ],
+    [
+      0,
+      1
+    ],
+    [
+      1,
+      1
+    ]
+  ],
+  "claim_boundary": "synthetic regression"
+}

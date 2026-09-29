@@ -1,0 +1,30 @@
+{
+  "site": "synthetic_beta2",
+  "contexts": [
+    "left",
+    "right"
+  ],
+  "continuations": [
+    "LEFT",
+    "RIGHT"
+  ],
+  "matrix": [
+    [
+      1,
+      0
+    ],
+    [
+      0,
+      1
+    ]
+  ],
+  "feature_values": [
+    "LEFT",
+    "RIGHT"
+  ],
+  "feature_to_continuation": {
+    "LEFT": "LEFT",
+    "RIGHT": "RIGHT"
+  },
+  "claim_boundary": "synthetic regression"
+}
