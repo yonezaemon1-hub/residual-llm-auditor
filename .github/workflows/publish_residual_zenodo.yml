@@ -1,0 +1,247 @@
+name: Publish Residual LLM Auditor to Zenodo
+
+on:
+  push:
+    paths:
+      - '.github/workflows/publish_residual_zenodo.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+      FROZEN_TAG: v0.9.0
+      FROZEN_SHA: 1bd60c86895267a8572d61322bea5ab4ced74956
+      ARCHIVE_NAME: residual-llm-auditor-v0.9.0.zip
+    steps:
+      - name: Require Zenodo token
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${ZENODO_TOKEN:-}" ]; then
+            echo "STOP_ZENODO_SECRET_MISSING"
+            exit 2
+          fi
+          echo "PASS_ZENODO_SECRET_PRESENT=true"
+
+      - name: Check out repository with tags
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify frozen tag and build exact archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse "${FROZEN_TAG}^{commit}")"
+          echo "FROZEN_TAG_SHA=$actual"
+          test "$actual" = "$FROZEN_SHA"
+          rm -rf _frozen
+          mkdir _frozen
+          git archive --format=zip --output="$ARCHIVE_NAME" "$FROZEN_TAG"
+          git archive --format=tar "$FROZEN_TAG" | tar -xf - -C _frozen
+          (
+            cd _frozen
+            python verify_snapshot.py
+          )
+          sha256sum "$ARCHIVE_NAME" | tee ZENODO_ARCHIVE_SHA256.txt
+          echo "PASS_FROZEN_SNAPSHOT=true"
+
+      - name: Create or reuse Zenodo record and publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, sys, urllib.request, urllib.parse, urllib.error
+          from pathlib import Path
+
+          token = os.environ["ZENODO_TOKEN"]
+          archive = os.environ["ARCHIVE_NAME"]
+          api = "https://zenodo.org/api"
+          title = "Residual LLM Auditor"
+          version = "0.9.0"
+
+          def request(method, url, data=None, content_type=None):
+              headers = {"Authorization": f"Bearer {token}"}
+              if content_type:
+                  headers["Content-Type"] = content_type
+              req = urllib.request.Request(url, data=data, headers=headers, method=method)
+              try:
+                  with urllib.request.urlopen(req, timeout=120) as resp:
+                      raw = resp.read()
+                      return resp.status, json.loads(raw.decode("utf-8")) if raw else {}
+              except urllib.error.HTTPError as e:
+                  body = e.read().decode("utf-8", errors="replace")
+                  print(f"ZENODO_HTTP_ERROR status={e.code} url={url}", file=sys.stderr)
+                  print(body[:4000], file=sys.stderr)
+                  raise
+
+          # Reuse an existing record/draft if a prior attempt already created one.
+          status, items = request("GET", f"{api}/deposit/depositions?sort=mostrecent&size=100")
+          if not isinstance(items, list):
+              raise SystemExit("STOP_UNEXPECTED_DEPOSITION_LIST")
+          dep = None
+          for item in items:
+              md = item.get("metadata") or {}
+              if md.get("title") == title and str(md.get("version", "")) == version:
+                  dep = item
+                  break
+
+          if dep and dep.get("submitted"):
+              doi = (dep.get("metadata") or {}).get("doi") or ((dep.get("metadata") or {}).get("prereserve_doi") or {}).get("doi")
+              recid = dep.get("record_id") or dep.get("id")
+              if not doi:
+                  raise SystemExit("STOP_PUBLISHED_RECORD_WITHOUT_DOI")
+              Path("ZENODO_PUBLISH_RESULT.json").write_text(json.dumps({
+                  "status": "already_published",
+                  "doi": doi,
+                  "record_id": recid,
+                  "deposition_id": dep.get("id")
+              }, indent=2) + "\n", encoding="utf-8")
+              print(f"ZENODO_DOI={doi}")
+              print(f"ZENODO_RECORD_ID={recid}")
+              raise SystemExit(0)
+
+          if dep is None:
+              _, dep = request("POST", f"{api}/deposit/depositions", data=b"{}", content_type="application/json")
+              print(f"CREATED_DEPOSITION_ID={dep.get('id')}")
+          else:
+              print(f"REUSED_DEPOSITION_ID={dep.get('id')}")
+
+          dep_id = dep["id"]
+          bucket = (dep.get("links") or {}).get("bucket")
+          if not bucket:
+              raise SystemExit("STOP_NO_BUCKET_LINK")
+
+          # Remove an old same-name file if present, then upload the frozen tag archive.
+          for f in dep.get("files") or []:
+              if f.get("filename") == archive or f.get("key") == archive:
+                  delete_url = (f.get("links") or {}).get("self")
+                  if delete_url:
+                      request("DELETE", delete_url)
+
+          data = Path(archive).read_bytes()
+          upload_url = bucket.rstrip("/") + "/" + urllib.parse.quote(archive)
+          request("PUT", upload_url, data=data, content_type="application/zip")
+          print("PASS_ZENODO_UPLOAD=true")
+
+          metadata = json.loads(Path(".zenodo.json").read_text(encoding="utf-8"))
+          # Keep the public release date explicit and ensure the GitHub release is linked.
+          metadata["publication_date"] = "2026-09-30"
+          related = metadata.setdefault("related_identifiers", [])
+          gh = {
+              "identifier": "https://github.com/yonezaemon1-hub/residual-llm-auditor/releases/tag/v0.9.0",
+              "relation": "isSupplementTo",
+              "scheme": "url"
+          }
+          if gh not in related:
+              related.append(gh)
+
+          _, dep = request(
+              "PUT",
+              f"{api}/deposit/depositions/{dep_id}",
+              data=json.dumps({"metadata": metadata}).encode("utf-8"),
+              content_type="application/json",
+          )
+          print("PASS_ZENODO_METADATA=true")
+
+          _, pub = request(
+              "POST",
+              f"{api}/deposit/depositions/{dep_id}/actions/publish",
+              data=b"",
+              content_type="application/json",
+          )
+          md = pub.get("metadata") or {}
+          doi = md.get("doi") or (md.get("prereserve_doi") or {}).get("doi")
+          recid = pub.get("record_id") or pub.get("id")
+          if not doi:
+              raise SystemExit("STOP_PUBLISH_RETURNED_NO_DOI")
+
+          result = {
+              "status": "published",
+              "doi": doi,
+              "record_id": recid,
+              "deposition_id": pub.get("id"),
+              "archive": archive
+          }
+          Path("ZENODO_PUBLISH_RESULT.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+          print(f"ZENODO_DOI={doi}")
+          print(f"ZENODO_RECORD_ID={recid}")
+          print("PASS_ZENODO_PUBLISHED=true")
+          PY
+
+      - name: Record DOI on main
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          doi="$(python -c 'import json; print(json.load(open("ZENODO_PUBLISH_RESULT.json"))["doi"])')"
+          recid="$(python -c 'import json; print(json.load(open("ZENODO_PUBLISH_RESULT.json"))["record_id"])')"
+          archive_sha="$(cut -d' ' -f1 ZENODO_ARCHIVE_SHA256.txt)"
+          cat > ZENODO_RECORD.txt <<EOF
+          RESIDUAL LLM AUDITOR — ZENODO SOFTWARE RECORD
+
+          Title:
+          Residual LLM Auditor
+
+          Version:
+          v0.9.0
+
+          Frozen GitHub tag:
+          v0.9.0
+
+          Frozen GitHub commit:
+          $FROZEN_SHA
+
+          Zenodo Software DOI:
+          $doi
+
+          Zenodo record:
+          https://zenodo.org/records/$recid
+
+          Archived file:
+          $ARCHIVE_NAME
+
+          Archive SHA-256:
+          $archive_sha
+
+          Publication date:
+          2026-09-30
+
+          Status:
+          PUBLISHED
+          EOF
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          doi = json.loads(Path("ZENODO_PUBLISH_RESULT.json").read_text())["doi"]
+          p = Path("README.md")
+          s = p.read_text(encoding="utf-8")
+          marker = "## Scope"
+          block = f"""## Archival record
+
+          - GitHub release: `v0.9.0`
+          - Zenodo Software DOI: `{doi}`
+          - Frozen release commit: `1bd60c86895267a8572d61322bea5ab4ced74956`
+
+          """
+          if "## Archival record" not in s:
+              if marker not in s:
+                  raise SystemExit("STOP_README_SCOPE_MARKER_MISSING")
+              s = s.replace(marker, block + marker, 1)
+              p.write_text(s, encoding="utf-8", newline="\n")
+          PY
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add README.md ZENODO_RECORD.txt
+          git diff --cached --check
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record Residual LLM Auditor Zenodo DOI [skip ci]'
+            git push origin HEAD:main
+          fi
