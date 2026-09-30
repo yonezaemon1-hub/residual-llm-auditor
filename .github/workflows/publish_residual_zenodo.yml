@@ -222,7 +222,7 @@ jobs:
           doi = json.loads(Path("ZENODO_PUBLISH_RESULT.json").read_text())["doi"]
           p = Path("README.md")
           s = p.read_text(encoding="utf-8")
-          marker = "## Scope"
+          marker = "## License"
           block = f"""## Archival record
 
           - GitHub release: `v0.9.0`
@@ -232,7 +232,7 @@ jobs:
           """
           if "## Archival record" not in s:
               if marker not in s:
-                  raise SystemExit("STOP_README_SCOPE_MARKER_MISSING")
+                  raise SystemExit("STOP_README_INSERTION_MARKER_MISSING")
               s = s.replace(marker, block + marker, 1)
               p.write_text(s, encoding="utf-8", newline="\n")
           PY
