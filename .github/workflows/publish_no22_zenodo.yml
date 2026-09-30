@@ -126,8 +126,11 @@ jobs:
                       return d
               return None
 
-          def publish_one(title, metadata, filename):
-              dep = find_existing(title)
+          def publish_one(title, metadata, filename, forced_dep_id=None):
+              if forced_dep_id is not None:
+                  _, dep = request("GET", f"{api}/deposit/depositions/{forced_dep_id}")
+              else:
+                  dep = find_existing(title)
               if dep and dep.get("submitted"):
                   md = dep.get("metadata") or {}
                   doi = md.get("doi") or (md.get("prereserve_doi") or {}).get("doi")
@@ -158,7 +161,7 @@ jobs:
 
               data = Path(filename).read_bytes()
               upload_url = bucket.rstrip("/") + "/" + urllib.parse.quote(filename)
-              request("PUT", upload_url, data=data, content_type=("application/pdf" if filename.endswith(".pdf") else "application/zip"))
+              request("PUT", upload_url, data=data, content_type="application/octet-stream")
 
               request(
                   "PUT",
@@ -179,7 +182,7 @@ jobs:
                   raise SystemExit(f"STOP_NO_DOI_AFTER_PUBLISH:{title}")
               return {"doi": doi, "record_id": recid, "deposition_id": pub.get("id"), "status": "published"}
 
-          paper = publish_one(paper_title, paper_md, "Yonezu_2026_Exact_Codim2_BCR.pdf")
+          paper = publish_one(paper_title, paper_md, "Yonezu_2026_Exact_Codim2_BCR.pdf", forced_dep_id=23050727)
           software = publish_one(software_title, software_md, "no22-source.zip")
 
           result = {"paper": paper, "software": software}
