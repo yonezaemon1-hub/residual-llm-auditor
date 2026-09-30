@@ -1,0 +1,196 @@
+name: Publish No.22 Paper and Software to Zenodo
+
+on:
+  push:
+    paths:
+      - '.github/workflows/publish_no22_zenodo.yml'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+      NO22_REPO: yonezaemon1-hub/exact-codimension-two-reaching-thresholds-bcr
+      NO22_TAG: v1.0.0
+    steps:
+      - name: Require Zenodo token
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${ZENODO_TOKEN:-}"
+          echo PASS_ZENODO_SECRET_PRESENT=true
+
+      - name: Download frozen No.22 release artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 5 --retry-delay 2             -o Yonezu_2026_Exact_Codim2_BCR.pdf             "https://github.com/${NO22_REPO}/releases/download/${NO22_TAG}/Yonezu_2026_Exact_Codim2_BCR.pdf"
+          curl -fL --retry 5 --retry-delay 2             -o no22-source.zip             "https://github.com/${NO22_REPO}/archive/refs/tags/${NO22_TAG}.zip"
+          echo "90311e218615a273356a797c4c7bfaa2b9cbeb2d3d92e38837e368e490a57916  Yonezu_2026_Exact_Codim2_BCR.pdf" | sha256sum -c -
+          sha256sum no22-source.zip | tee NO22_SOURCE_ZIP_SHA256.txt
+          echo PASS_NO22_DOWNLOADS=true
+
+      - name: Publish paper and software records
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, sys, urllib.request, urllib.parse, urllib.error
+          from pathlib import Path
+
+          token = os.environ["ZENODO_TOKEN"]
+          api = "https://zenodo.org/api"
+
+          paper_title = "Exact Codimension-Two Reaching Thresholds for Binary Completely Reachable Automata"
+          software_title = paper_title + " — Reproducibility Package"
+
+          paper_md = {
+              "title": paper_title,
+              "creators": [{"name": "Yonezu, Ryutaro"}],
+              "description": (
+                  "Preprint proving the exact worst-case reaching threshold of (n-2)-subsets "
+                  "in n-state binary completely reachable automata for every n >= 4, with an "
+                  "exhaustive finite certificate for the n=8 boundary case."
+              ),
+              "access_right": "open",
+              "keywords": [
+                  "finite automata",
+                  "completely reachable automata",
+                  "subset reachability",
+                  "synchronization"
+              ],
+              "license": "cc-by-4.0",
+              "upload_type": "publication",
+              "publication_type": "preprint",
+              "language": "eng",
+              "publication_date": "2026-09-30",
+              "related_identifiers": [{
+                  "identifier": "https://github.com/yonezaemon1-hub/exact-codimension-two-reaching-thresholds-bcr/releases/tag/v1.0.0",
+                  "relation": "isSupplementedBy",
+                  "scheme": "url"
+              }]
+          }
+
+          software_md = {
+              "title": software_title,
+              "creators": [{"name": "Yonezu, Ryutaro"}],
+              "description": (
+                  "Reproducibility package for the exact codimension-two reaching threshold theorem "
+                  "in binary completely reachable automata. Includes the frozen source at v1.0.0 "
+                  "and the exhaustive n=8 certificate."
+              ),
+              "version": "1.0.0",
+              "access_right": "open",
+              "keywords": [
+                  "finite automata",
+                  "completely reachable automata",
+                  "subset reachability",
+                  "exhaustive verification",
+                  "reproducibility"
+              ],
+              "license": "mit",
+              "upload_type": "software",
+              "language": "eng",
+              "publication_date": "2026-09-30",
+              "related_identifiers": [{
+                  "identifier": "https://github.com/yonezaemon1-hub/exact-codimension-two-reaching-thresholds-bcr/releases/tag/v1.0.0",
+                  "relation": "isSupplementTo",
+                  "scheme": "url"
+              }]
+          }
+
+          def request(method, url, data=None, content_type=None):
+              headers = {"Authorization": f"Bearer {token}"}
+              if content_type:
+                  headers["Content-Type"] = content_type
+              req = urllib.request.Request(url, data=data, headers=headers, method=method)
+              try:
+                  with urllib.request.urlopen(req, timeout=180) as resp:
+                      raw = resp.read()
+                      return resp.status, json.loads(raw.decode("utf-8")) if raw else {}
+              except urllib.error.HTTPError as e:
+                  body = e.read().decode("utf-8", errors="replace")
+                  print(f"ZENODO_HTTP_ERROR status={e.code} url={url}", file=sys.stderr)
+                  print(body[:6000], file=sys.stderr)
+                  raise
+
+          _, deposits = request("GET", f"{api}/deposit/depositions?sort=mostrecent&size=100")
+          if not isinstance(deposits, list):
+              raise SystemExit("STOP_UNEXPECTED_DEPOSITION_LIST")
+
+          def find_existing(title):
+              for d in deposits:
+                  md = d.get("metadata") or {}
+                  if md.get("title") == title:
+                      return d
+              return None
+
+          def publish_one(title, metadata, filename):
+              dep = find_existing(title)
+              if dep and dep.get("submitted"):
+                  md = dep.get("metadata") or {}
+                  doi = md.get("doi") or (md.get("prereserve_doi") or {}).get("doi")
+                  recid = dep.get("record_id") or dep.get("id")
+                  if not doi:
+                      raise SystemExit(f"STOP_PUBLISHED_WITHOUT_DOI:{title}")
+                  print(f"REUSE_PUBLISHED title={title}")
+                  return {"doi": doi, "record_id": recid, "deposition_id": dep.get("id"), "status": "already_published"}
+
+              if dep is None:
+                  _, dep = request("POST", f"{api}/deposit/depositions", data=b"{}", content_type="application/json")
+                  deposits.insert(0, dep)
+                  print(f"CREATED_DEPOSITION title={title} id={dep.get('id')}")
+              else:
+                  print(f"REUSED_DRAFT title={title} id={dep.get('id')}")
+
+              dep_id = dep["id"]
+              bucket = (dep.get("links") or {}).get("bucket")
+              if not bucket:
+                  raise SystemExit(f"STOP_NO_BUCKET:{title}")
+
+              # Remove same-name stale file from a previous failed attempt.
+              for f in dep.get("files") or []:
+                  if f.get("filename") == filename or f.get("key") == filename:
+                      u = (f.get("links") or {}).get("self")
+                      if u:
+                          request("DELETE", u)
+
+              data = Path(filename).read_bytes()
+              upload_url = bucket.rstrip("/") + "/" + urllib.parse.quote(filename)
+              request("PUT", upload_url, data=data, content_type=("application/pdf" if filename.endswith(".pdf") else "application/zip"))
+
+              request(
+                  "PUT",
+                  f"{api}/deposit/depositions/{dep_id}",
+                  data=json.dumps({"metadata": metadata}).encode("utf-8"),
+                  content_type="application/json"
+              )
+              _, pub = request(
+                  "POST",
+                  f"{api}/deposit/depositions/{dep_id}/actions/publish",
+                  data=b"",
+                  content_type="application/json"
+              )
+              md = pub.get("metadata") or {}
+              doi = md.get("doi") or (md.get("prereserve_doi") or {}).get("doi")
+              recid = pub.get("record_id") or pub.get("id")
+              if not doi:
+                  raise SystemExit(f"STOP_NO_DOI_AFTER_PUBLISH:{title}")
+              return {"doi": doi, "record_id": recid, "deposition_id": pub.get("id"), "status": "published"}
+
+          paper = publish_one(paper_title, paper_md, "Yonezu_2026_Exact_Codim2_BCR.pdf")
+          software = publish_one(software_title, software_md, "no22-source.zip")
+
+          result = {"paper": paper, "software": software}
+          Path("NO22_ZENODO_RESULT.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+          print("NO22_PAPER_DOI=" + paper["doi"])
+          print("NO22_PAPER_RECORD_ID=" + str(paper["record_id"]))
+          print("NO22_SOFTWARE_DOI=" + software["doi"])
+          print("NO22_SOFTWARE_RECORD_ID=" + str(software["record_id"]))
+          print("PASS_NO22_ZENODO_PUBLISHED=true")
+          PY
+
+      - name: Show result
+        shell: bash
+        run: cat NO22_ZENODO_RESULT.json
