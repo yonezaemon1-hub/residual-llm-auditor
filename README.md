@@ -83,6 +83,14 @@ See `FORMAL_DEFINITION_V09.md`, `DEPRECATIONS_V09.md`, and
 `PUBLICATION_POLICY.md`. `HISTORY_V09.md` preserves the earlier README, including
 superseded interpretations.
 
+## Archival record
+
+- GitHub release: `v0.9.0`
+- Frozen release commit: `1bd60c86895267a8572d61322bea5ab4ced74956`
+- Zenodo Software DOI: `10.5281/zenodo.23043042`
+- Zenodo record: `https://zenodo.org/records/23043042`
+- Archived file SHA-256: `7360309bed0becd252ea7259f5f72bd227707dc54146e361834b468709e5c05e`
+
 ## License
 
 Original code and repository documentation are provided under the MIT License.
